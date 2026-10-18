@@ -57,7 +57,7 @@ export default async function ArtworkDetailPage({ params }: Props) {
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="font-serif text-xl font-semibold">
-            Galería<span className="text-accent">Viva</span>
+            Yesart<span className="text-accent">-betur</span>
           </Link>
           <Link href="/gallery" className="text-sm text-muted hover:text-foreground">
             ← Catálogo

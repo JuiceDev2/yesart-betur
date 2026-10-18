@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Aviso de privacidad",
-  description: "Cómo Galería Viva trata tus datos personales",
+  description: "Cómo Yesart-betur trata tus datos personales",
 };
 
 export default function PrivacyPage() {
@@ -12,7 +12,7 @@ export default function PrivacyPage() {
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-6">
           <Link href="/" className="font-serif text-xl font-semibold">
-            Galería<span className="text-accent">Viva</span>
+            Yesart<span className="text-accent">-betur</span>
           </Link>
         </div>
       </header>
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
 
         <section className="mt-10 space-y-4 text-sm leading-relaxed text-muted">
           <p>
-            Galería Viva (&ldquo;nosotros&rdquo;) opera una plataforma que conecta artistas y
+            Yesart-betur (&ldquo;nosotros&rdquo;) opera una plataforma que conecta artistas y
             personas interesadas en obras o murales. No procesamos pagos en línea.
           </p>
 

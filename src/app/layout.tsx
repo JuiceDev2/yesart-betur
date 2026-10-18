@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
+import PwaRegister from "@/components/PwaRegister";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +26,8 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Galería Viva | Arte original y murales a medida",
-    template: "%s | Galería Viva",
+    default: "Yesart-betur | Arte original y murales a medida",
+    template: "%s | Yesart-betur",
   },
   description:
     "La plataforma donde artistas independientes exhiben sus obras y ofrecen servicios de murales. Compra arte auténtico o contrata artistas para tu espacio.",
@@ -37,22 +39,22 @@ export const metadata: Metadata = {
     "galería online",
     "arte original",
   ],
-  authors: [{ name: "Galería Viva" }],
-  creator: "Galería Viva",
+  authors: [{ name: "Yesart-betur" }],
+  creator: "Yesart-betur",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
   ),
   openGraph: {
-    title: "Galería Viva",
+    title: "Yesart-betur",
     description: "Arte original y murales a medida de artistas independientes",
     type: "website",
     locale: "es_MX",
-    siteName: "Galería Viva",
-    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Galería Viva" }],
+    siteName: "Yesart-betur",
+    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Yesart-betur" }],
   },
   twitter: {
     card: "summary",
-    title: "Galería Viva",
+    title: "Yesart-betur",
     description: "Arte original y murales a medida",
     images: ["/icon-512.png"],
   },
@@ -66,10 +68,12 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.webmanifest",
+  applicationName: "Yesart-betur",
+  formatDetection: { telephone: false },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Galería Viva",
+    title: "Yesart-betur",
   },
 };
 
@@ -80,6 +84,7 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -94,6 +99,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
+        <PwaRegister />
+        <InstallPrompt />
       </body>
     </html>
   );

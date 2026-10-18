@@ -69,7 +69,7 @@ export default async function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Galería Viva",
+    name: "Yesart-betur",
     url: siteUrl,
     inLanguage: "es-MX",
   };
@@ -361,7 +361,7 @@ export default async function HomePage() {
           <div className="flex flex-col justify-between gap-8 md:flex-row">
             <div>
               <p className="font-serif text-xl font-semibold">
-                Galería<span className="text-accent">Viva</span>
+                Yesart<span className="text-accent">-betur</span>
               </p>
               <p className="mt-2 max-w-xs text-sm text-muted">
                 Arte original y murales a medida. Conectamos artistas independientes con
@@ -453,7 +453,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="mt-10 border-t border-border pt-6 text-xs text-muted">
-            <p>© {new Date().getFullYear()} Galería Viva</p>
+            <p>© {new Date().getFullYear()} Yesart-betur</p>
           </div>
         </div>
       </footer>

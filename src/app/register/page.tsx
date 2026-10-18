@@ -245,7 +245,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
           <Link href="/" className="font-serif text-xl font-semibold">
-            Galería<span className="text-accent">Viva</span>
+            Yesart<span className="text-accent">-betur</span>
           </Link>
         </div>
       </header>

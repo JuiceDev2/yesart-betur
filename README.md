@@ -1,4 +1,4 @@
-# Galería Viva
+# Yesart-betur
 
 Marketplace de arte original y murales. Next.js 15 · TypeScript · Supabase · Tailwind v4 · Vercel.
 Roles: **admin**, **artista**, **cliente**. Los visitantes pueden solicitar una obra o un servicio sin cuenta.

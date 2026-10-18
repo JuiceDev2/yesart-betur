@@ -24,7 +24,7 @@ export default function SiteHeader({ hasArtists = false }: SiteHeaderProps) {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
         <Link href="/" className="font-serif text-2xl font-semibold tracking-tight">
-          Galería<span className="text-accent">Viva</span>
+          Yesart<span className="text-accent">-betur</span>
         </Link>
 
         <nav

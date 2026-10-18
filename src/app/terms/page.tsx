@@ -11,14 +11,14 @@ export default function TermsPage() {
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-6">
           <Link href="/" className="font-serif text-xl font-semibold">
-            Galería<span className="text-accent">Viva</span>
+            Yesart<span className="text-accent">-betur</span>
           </Link>
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-6 py-12 text-sm leading-relaxed text-muted">
         <h1 className="font-serif text-3xl font-medium text-foreground">Términos de uso</h1>
         <p className="mt-6">
-          Galería Viva es un intermediario de contacto entre artistas y clientes. El
+          Yesart-betur es un intermediario de contacto entre artistas y clientes. El
           precio, la entrega, el pago y cualquier acuerdo se celebran directamente entre
           las partes. La plataforma no garantiza la calidad de las obras ni el resultado
           de los servicios de mural.

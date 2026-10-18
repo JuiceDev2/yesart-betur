@@ -14,7 +14,7 @@ type NewOrderPayload = {
   serviceId?: string | null;
 };
 
-const FROM_DEFAULT = "Galería Viva <onboarding@resend.dev>";
+const FROM_DEFAULT = "Yesart-betur <onboarding@resend.dev>";
 
 function siteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -104,7 +104,7 @@ export async function notifyNewOrder(payload: NewOrderPayload): Promise<void> {
         text: [
           "Hola,",
           "",
-          "Tienes una nueva solicitud en Galería Viva.",
+          "Tienes una nueva solicitud en Yesart-betur.",
           `Ítem: ${itemTitle}`,
           `Cliente: ${payload.clientName}`,
           `Teléfono: ${payload.clientPhone}`,

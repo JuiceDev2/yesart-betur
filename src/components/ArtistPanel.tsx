@@ -394,7 +394,7 @@ export default function ArtistPanel({ profile }: ArtistPanelProps) {
                       <div className="flex gap-2 shrink-0">
                         {order.client_phone && (
                           <a
-                            href={`https://wa.me/${order.client_phone.replace(/[^\d+]/g, "").replace(/^\+/, "")}?text=${encodeURIComponent("Hola, te contacto por tu solicitud en Galería Viva")}`}
+                            href={`https://wa.me/${order.client_phone.replace(/[^\d+]/g, "").replace(/^\+/, "")}?text=${encodeURIComponent("Hola, te contacto por tu solicitud en Yesart-betur")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="h-9 px-3 rounded-lg border border-border text-xs font-medium flex items-center"

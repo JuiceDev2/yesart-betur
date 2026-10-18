@@ -1,5 +1,5 @@
 -- =============================================================================
--- Galería Viva — Schema seguro (Fase 1)
+-- Yesart-betur — Schema seguro (Fase 1)
 -- Idempotente donde es posible. Ejecutar en orden.
 -- =============================================================================
 
