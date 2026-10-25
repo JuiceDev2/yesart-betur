@@ -56,7 +56,7 @@ export default function AdminApplications() {
   async function showDocs(a: App) {
     if (!a.id_doc_path || !a.selfie_path) return;
     const { data } = await createClient().storage.from("kyc").createSignedUrls([a.id_doc_path, a.selfie_path], 300);
-    setDocs((d) => ({ ...d, [a.id]: { id: data?.[0]?.signedUrl, selfie: data?.[1]?.signedUrl } }));
+    setDocs((d) => ({ ...d, [a.id]: { id: data?.[0]?.signedUrl ?? undefined, selfie: data?.[1]?.signedUrl ?? undefined } }));
   }
 
   async function decide(a: App, action: "approve" | "reject") {
