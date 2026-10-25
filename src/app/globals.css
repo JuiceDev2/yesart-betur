@@ -122,3 +122,94 @@ body {
   html { scroll-behavior: auto; }
   .card-lift { transition: none; }
 }
+
+/* ───────────── PWA y responsive ───────────── */
+
+:root {
+  --mobile-nav-h: 3.75rem;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Notch y esquinas redondeadas en horizontal (viewport-fit=cover). */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  overflow-x: clip;
+  overflow-wrap: break-word;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+summary,
+[role="button"],
+[role="tab"] {
+  touch-action: manipulation;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+/* Márgenes seguros reutilizables */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Avisos flotantes (instalar, actualizar): por encima de la barra inferior si existe. */
+.pwa-banner {
+  bottom: calc(env(safe-area-inset-bottom) + var(--mobile-nav-h, 0px) + 0.75rem);
+}
+body:not(:has([data-mobile-nav])) {
+  --mobile-nav-h: 0px;
+}
+@media (min-width: 640px) {
+  .pwa-banner {
+    right: calc(env(safe-area-inset-right) + 1rem);
+    bottom: calc(env(safe-area-inset-bottom) + var(--mobile-nav-h, 0px) + 1rem);
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --mobile-nav-h: 0px;
+  }
+}
+
+/* Reserva espacio para la barra inferior móvil para que no tape el final de la página. */
+@media (max-width: 1023.98px) {
+  body:has([data-mobile-nav]) {
+    padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));
+  }
+}
+
+/* iOS amplía la página al enfocar campos con texto menor de 16 px. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Como app instalada: sin selección accidental de texto en la interfaz ni rebote del fondo. */
+@media (display-mode: standalone) {
+  html {
+    overscroll-behavior-y: none;
+  }
+  nav,
+  header,
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

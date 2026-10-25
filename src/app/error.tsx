@@ -15,7 +15,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-6 text-center">
       <h1 className="text-2xl font-medium">Algo salió mal</h1>
       <p className="mt-2 max-w-md text-sm text-muted">
         Ocurrió un error inesperado. Puedes reintentar o volver al inicio.

@@ -5,7 +5,7 @@ export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "soporte@t
 
 export default function LegalShell({ title, updated, children }: { title: string; updated: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
           <Link href="/" className="inline-flex">

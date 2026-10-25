@@ -31,9 +31,10 @@ export default function AgeGate() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="age-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0a0806]/95 px-6"
+      className="fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-[#0a0806]/95"
     >
-      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center">
+      <div className="flex min-h-full items-center justify-center px-4 py-6 sm:px-6">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 text-center sm:p-8">
         <div className="mb-5 flex justify-center"><Logo tagline className="text-4xl" /></div>
         <p className="mb-3 text-xs font-medium uppercase tracking-[0.3em] text-muted">Solo mayores de 18</p>
         <h2 id="age-title" className="font-serif text-3xl font-medium">
@@ -62,6 +63,7 @@ export default function AgeGate() {
             Soy menor de edad · Salir
           </a>
         </div>
+      </div>
       </div>
     </div>
   );

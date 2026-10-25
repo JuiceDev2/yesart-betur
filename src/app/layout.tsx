@@ -5,6 +5,8 @@ import "./globals.css";
 import { cookies } from "next/headers";
 import AgeGate from "@/components/AgeGate";
 import { AGE_COOKIE } from "@/lib/constants";
+import PwaRegister from "@/components/pwa/PwaRegister";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,15 +56,24 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  applicationName: "Aura",
+  formatDetection: { telephone: false, email: false, address: false },
+  // Instalación en iOS/iPadOS (Añadir a pantalla de inicio). "black" evita que el contenido
+  // quede bajo la barra de estado en modo standalone.
+  appleWebApp: { capable: true, title: "Aura", statusBarStyle: "black" },
+  // Manifest estático en public/manifest.webmanifest (se sobrescribe al copiar el proyecto).
   manifest: "/manifest.webmanifest",
   // Contenido para adultos: se pide a los buscadores que lo traten como tal
-  other: { rating: "adult" },
+  other: { rating: "adult", "apple-mobile-web-app-capable": "yes" },
 };
 
 export const viewport: Viewport = {
   themeColor: "#0d0b09",
   width: "device-width",
   initialScale: 1,
+  // Permite usar el área completa en móviles con notch; globals.css aplica los márgenes seguros.
+  viewportFit: "cover",
+  colorScheme: "dark",
 };
 
 export default async function RootLayout({
@@ -74,11 +85,13 @@ export default async function RootLayout({
   return (
     <html
       lang="es-MX"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="flex min-h-dvh flex-col bg-background text-foreground">
         {children}
         {!ageOk && <AgeGate />}
+        <PwaRegister />
+        <InstallPrompt enabled={ageOk} />
       </body>
     </html>
   );

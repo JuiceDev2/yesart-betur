@@ -64,7 +64,7 @@ export default function Thread({
   }
 
   return (
-    <div className="flex h-[70vh] flex-col rounded-3xl border border-border bg-card">
+    <div className="flex h-[70dvh] max-h-[48rem] min-h-[22rem] flex-col rounded-3xl border border-border bg-card">
       <div className="flex-1 space-y-2 overflow-y-auto p-4" role="log" aria-live="polite" aria-label="Mensajes">
         {messages.length === 0 && <p className="py-10 text-center text-sm text-muted">Aún no hay mensajes. Escribe el primero.</p>}
         {messages.map((m) => {

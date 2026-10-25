@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import Avatar from "@/components/Avatar";
 import LogoutButton from "@/components/LogoutButton";
 import Logo from "@/components/Logo";
+import MobileNav, { type MobileNavItem } from "@/components/MobileNav";
 
 const linkCls = "rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:text-foreground";
 
@@ -29,8 +30,24 @@ export default async function SiteHeader() {
     if (profile.role === "admin") links.push({ href: "/admin", label: "Admin" });
   }
 
+  // Barra inferior (móvil/tablet vertical): solo con sesión iniciada.
+  const mobileItems: MobileNavItem[] = profile
+    ? [
+        { href: "/explore", label: "Explorar", icon: "explore" },
+        { href: "/feed", label: "Feed", icon: "feed" },
+        { href: "/messages", label: "Mensajes", icon: "messages", badge: unread },
+        profile.role === "creator"
+          ? { href: "/studio", label: "Estudio", icon: "studio" }
+          : profile.role === "admin"
+            ? { href: "/admin", label: "Admin", icon: "admin" }
+            : { href: "/subscriptions", label: "Suscripciones", icon: "subscriptions" },
+        { href: "/settings", label: "Perfil", icon: "settings" },
+      ]
+    : [];
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
+    <>
+    <header className="safe-top sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="inline-flex" aria-label="Aura, inicio">
           <Logo />
@@ -63,7 +80,7 @@ export default async function SiteHeader() {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-9 items-center rounded-full bg-accent px-5 text-sm font-semibold text-accent-ink transition-opacity hover:opacity-90"
+                className="inline-flex h-10 items-center rounded-full bg-accent px-4 sm:px-5 text-sm font-semibold text-accent-ink transition-opacity hover:opacity-90"
               >
                 Crear cuenta
               </Link>
@@ -73,13 +90,13 @@ export default async function SiteHeader() {
           <details className="group relative lg:hidden">
             <summary
               aria-label="Abrir menú"
-              className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full border border-border [&::-webkit-details-marker]:hidden"
+              className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-border [&::-webkit-details-marker]:hidden"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </summary>
-            <div className="absolute right-0 top-12 w-64 rounded-2xl border border-border bg-card p-3 shadow-2xl">
+            <div className="absolute right-0 top-14 max-h-[calc(100dvh_-_6rem)] w-64 max-w-[calc(100vw_-_2rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 shadow-2xl">
               <ul className="space-y-1 text-sm">
                 {links.map((l) => (
                   <li key={l.href}>
@@ -119,5 +136,7 @@ export default async function SiteHeader() {
         </div>
       </div>
     </header>
+    {mobileItems.length > 0 && <MobileNav items={mobileItems} />}
+    </>
   );
 }

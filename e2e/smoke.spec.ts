@@ -84,3 +84,69 @@ test.describe("público", () => {
     await expect(page.getByRole("link", { name: /explorar/i }).first()).toBeVisible();
   });
 });
+
+test.describe("PWA", () => {
+  test("el manifest es válido y enlazado desde el HTML", async ({ page, request }) => {
+    await page.goto("/");
+    const href = await page.locator('link[rel="manifest"]').getAttribute("href");
+    expect(href).toBeTruthy();
+    const res = await request.get(href!);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("manifest+json");
+    const m = await res.json();
+    expect(m.display).toBe("standalone");
+    expect(m.icons.some((i: { purpose?: string }) => i.purpose === "maskable")).toBe(true);
+  });
+
+  test("el service worker se sirve sin caché y con el alcance correcto", async ({ request }) => {
+    const res = await request.get("/sw.js");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("javascript");
+    expect(res.headers()["cache-control"]).toContain("no-cache");
+    expect(res.headers()["service-worker-allowed"]).toBe("/");
+  });
+
+  test("la página offline y los íconos no requieren sesión", async ({ request }) => {
+    for (const path of ["/offline.html", "/icon-192.png", "/icon-maskable-512.png", "/apple-touch-icon.png"]) {
+      const res = await request.get(path, { maxRedirects: 0 });
+      expect(res.status(), path).toBe(200);
+    }
+  });
+
+  test("meta de iOS y viewport con áreas seguras", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator('meta[name="viewport"]')).toHaveAttribute("content", /viewport-fit=cover/);
+    await expect(page.locator('meta[name="apple-mobile-web-app-capable"], meta[name="mobile-web-app-capable"]').first()).toHaveAttribute("content", "yes");
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("href", /apple-touch-icon/);
+  });
+});
+
+test.describe("responsive", () => {
+  const sizes = [
+    { name: "móvil pequeño", width: 320, height: 640 },
+    { name: "móvil", width: 390, height: 844 },
+    { name: "móvil horizontal", width: 844, height: 390 },
+    { name: "tablet", width: 768, height: 1024 },
+    { name: "laptop", width: 1280, height: 800 },
+    { name: "pantalla grande", width: 1920, height: 1080 },
+  ];
+  for (const s of sizes) {
+    test(`sin desbordamiento horizontal: ${s.name} (${s.width}×${s.height})`, async ({ page }) => {
+      await page.setViewportSize({ width: s.width, height: s.height });
+      for (const path of ["/", "/explore", "/login", "/register", "/terms"]) {
+        await page.goto(path);
+        await passAgeGate(page);
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflow, `${path} a ${s.width}px`).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+
+  test("la puerta de edad se puede recorrer en pantallas bajas", async ({ page }) => {
+    await page.setViewportSize({ width: 667, height: 320 });
+    await page.goto("/");
+    const btn = page.getByRole("button", { name: /soy mayor/i });
+    await btn.scrollIntoViewIfNeeded();
+    await expect(btn).toBeVisible();
+  });
+});

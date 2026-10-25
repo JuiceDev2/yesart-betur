@@ -26,7 +26,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   if (!post) notFound();
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:px-6">
         <Link href={`/c/${post.username}`} className="mb-4 inline-block text-sm text-muted hover:text-foreground">

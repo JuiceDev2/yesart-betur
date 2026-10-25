@@ -47,3 +47,18 @@ Primer paso recomendado: `npm install && npm run typecheck && npm test && npm ru
 `npm run dev | build | lint | typecheck | test | test:e2e | test:rls | test:lighthouse`
 
 Pruebas SQL: `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security.test.sql` (¡solo en una base de pruebas!).
+
+
+## PWA (app instalable) y responsive
+
+- **Manifest**: `public/manifest.webmanifest`. Íconos `any` y `maskable` en `public/`.
+- **Service worker**: `public/sw.js`. Solo se registra en producción. Cachea únicamente recursos estáticos
+  (`/_next/static`, íconos y `/offline.html`); **nunca** páginas, `/api`, `/auth` ni Supabase/Stripe.
+  Para invalidar cachés tras cambios en el SW, sube `VERSION` en `sw.js`.
+- **Actualizaciones**: cuando hay versión nueva aparece un aviso «Actualizar» (`components/pwa/PwaRegister.tsx`).
+- **Instalación**: Chrome/Edge/Android usan el diálogo nativo; iOS muestra los pasos de «Añadir a pantalla de inicio»
+  (`components/pwa/InstallPrompt.tsx`). También hay un enlace «Instalar app» en el pie.
+- **Responsive**: diseño mobile-first con Tailwind; `dvh` en lugar de `vh`, áreas seguras (`env(safe-area-inset-*)`),
+  barra inferior móvil (`components/MobileNav.tsx`) y campos de 16 px en táctiles (evita el zoom de iOS).
+- Probar la PWA: `npm run build && npm start`, abrir en Chrome → DevTools → Application → Manifest / Service Workers.
+  (En `npm run dev` el service worker no se registra a propósito.)

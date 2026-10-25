@@ -126,7 +126,7 @@ function MediaGrid({ postId }: { postId: string }) {
             controls
             playsInline
             preload="metadata"
-            className="max-h-[70vh] w-full rounded-2xl bg-black"
+            className="max-h-[70dvh] w-full rounded-2xl bg-black"
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
@@ -135,7 +135,7 @@ function MediaGrid({ postId }: { postId: string }) {
             src={m.url}
             alt="Imagen de la publicación"
             loading="lazy"
-            className="max-h-[70vh] w-full rounded-2xl object-cover"
+            className="max-h-[70dvh] w-full rounded-2xl object-cover"
           />
         )
       )}

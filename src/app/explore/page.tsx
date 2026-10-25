@@ -35,7 +35,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: SP }
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <h1 className="font-serif text-4xl font-medium">Explorar creadores</h1>

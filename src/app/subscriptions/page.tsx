@@ -15,7 +15,7 @@ export default async function SubscriptionsPage() {
   const [{ data }, currency] = await Promise.all([supabase.rpc("my_subscriptions"), getCurrency()]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="font-serif text-3xl font-medium">Mis suscripciones</h1>

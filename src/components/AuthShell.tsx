@@ -3,7 +3,7 @@ import Logo from "@/components/Logo";
 
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
           <Link href="/" className="inline-flex">

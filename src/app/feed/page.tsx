@@ -22,7 +22,7 @@ export default async function FeedPage() {
   const suggestions = posts.length === 0 ? await getFeaturedCreators(4) : [];
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="font-serif text-3xl font-medium">Mi feed</h1>
