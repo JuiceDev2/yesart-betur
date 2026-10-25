@@ -1,64 +1,25 @@
-# Runbook — Yesart-betur
+# Runbook de operación — Aura
 
-## Primer administrador
+## Tareas diarias del equipo
+- **Reportes prioritarios** (menores, sin consentimiento, ilegal): la publicación ya está oculta automáticamente; revisa en Admin → Reportes y decide el mismo día. Si hay indicios de material con menores, conserva evidencia y avisa a las autoridades según tu jurisdicción.
+- **Solicitudes de creadores:** Admin → Solicitudes. Compara el documento y la selfie con los datos y la fecha de nacimiento; aprueba o rechaza con motivo. Los documentos se borran solos a los 30 días de resolver.
+- **Retiros:** Admin → Pagos → «Por pagar». Transfiere a la CLABE/IBAN indicada y marca «pagado» con la clave de rastreo. Un retiro solo se puede pagar con saldo liberado (retención de `hold_days`).
 
-Requiere la migración 008 aplicada. En el SQL editor de Supabase:
+## Variables críticas
+`SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` (≥16 caracteres), `STRIPE_*` o credenciales de tu procesador, `PAYMENT_PROVIDER`. Nunca pongas `ALLOW_MOCK_PAYMENTS=1` con dinero real.
 
-```sql
-update public.profiles set role = 'admin', is_active = true where email = 'tu@email.com';
-```
-
-## Migraciones (orden)
-
-001 → 002 → 003 → 004 → 005 → 006 → 007 → 008. No edites migraciones ya aplicadas: crea una nueva.
-
-## Variables críticas (Vercel)
-
-| Variable | Notas |
-|----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Públicas |
-| `NEXT_PUBLIC_SITE_URL` | HTTPS de producción |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Solo servidor** |
-| `CRON_SECRET` | **Obligatoria**, ≥ 16 caracteres. Vercel la envía como Bearer al cron |
-| `RESEND_API_KEY`, `EMAIL_FROM`, `OPS_EMAIL` | Opcionales (correos) |
-| `NEXT_PUBLIC_CONTACT_WHATSAPP`, `NEXT_PUBLIC_CONTACT_EMAIL` | Opcionales (pie de página) |
-
-## Cron de limpieza
-
-`vercel.json` programa `GET /api/cron/cleanup` a diario. Para probarlo a mano:
-
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://TU-DOMINIO/api/cron/cleanup
-```
-
-401 = secreto incorrecto o ausente · 500 = `CRON_SECRET` sin configurar o falló una limpieza (ver `results`).
-
-## Panel admin
-
-- **Resumen**: pendientes (solicitudes, órdenes sin atender > 48 h) y últimos eventos.
-- **Solicitudes / Artistas / Órdenes / Moderación / Auditoría**: paginado en servidor, con búsqueda.
-- Rechazar una solicitud y deshabilitar a un artista piden motivo; ambos quedan en la auditoría y se avisa por correo.
-- Órdenes → "Exportar CSV" descarga todas (no solo la página visible).
+## Cron
+`GET /api/cron/cleanup` (diario, `Authorization: Bearer $CRON_SECRET`) limpia eventos de límite de uso, auditoría vieja, suscripciones vencidas, archivos huérfanos y documentos KYC.
 
 ## Incidentes
+- **Webhook caído / pagos sin acceso:** reenvía los eventos desde el panel del procesador; son idempotentes (`provider`, `provider_ref` únicos).
+- **Reembolso o contracargo:** llega como `charge.refunded` / `charge.dispute.created` y revoca el acceso y el saldo asociado. Un reembolso parcial se ignora a propósito: revísalo a mano.
+- **Creador abusivo:** Admin → Creadores → Suspender (cancela sus cobros recurrentes y oculta su perfil).
+- **Cuenta comprometida:** Admin → Creadores → «Deshabilitar cuenta».
+- **Fuga de enlaces firmados:** caducan solos (minutos); rota claves de Supabase si hay sospecha de fuga de la service key.
 
-| Síntoma | Acción |
-|---------|--------|
-| Spam de órdenes | Revisar rate limits e IP en logs; deshabilitar artista o ítem desde Moderación |
-| Artista no puede subir | `is_active = true` y `role = 'artist'` |
-| `create_order` falla "Forbidden" | Confirmar migración 006/008 y service role en `/api/orders` |
-| Cron responde 500 | Falta `CRON_SECRET` o una RPC de limpieza falló |
-| No se puede borrar/degradar a un admin | Es el último admin activo: promueve a otro primero |
-| Reset password no llega | Redirect Auth + SMTP de Supabase |
-| Correos no salen | `RESEND_API_KEY`/dominio verificado; revisar logs `[email]` |
+## Parámetros de la plataforma
+Tabla `platform_settings`: `fee_bps` (comisión, 2000 = 20 %), `hold_days` (retención), `min_payout_cents`, `currency`. Cámbialos con SQL como administrador; el cambio aplica a cobros nuevos.
 
-## Rotar keys
-
-1. Generar nueva service role en Supabase
-2. Actualizar Vercel
-3. Redeploy
-4. Revocar la anterior
-
-## Verificación manual de `create_order`
-
-Con la anon key, `rpc('create_order')` debe fallar. Solo `/api/orders` (service role) puede crearlas. Esto lo cubre `npm run test:rls`.
+## Verificación continua
+Job `database` de CI corre `security.test.sql` y las pruebas de API en un Supabase local. Si agregas tablas, activa RLS (la función `tables_without_rls()` lista las que falten) y añade aserciones a la suite.

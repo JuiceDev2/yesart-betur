@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -38,14 +39,14 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
-          <Link href="/" className="font-serif text-xl font-semibold">
-            Yesart<span className="text-accent">-betur</span>
+          <Link href="/" className="inline-flex">
+            <Logo />
           </Link>
         </div>
       </header>
       <main className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <h1 className="mb-8 text-center font-serif text-3xl font-medium">
+          <h1 className="mb-8 text-center text-3xl font-medium">
             Nueva contraseña
           </h1>
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -79,14 +80,14 @@ export default function ResetPasswordPage() {
               />
             </div>
             {error && (
-              <p className="text-sm text-red-600" role="alert">
+              <p className="text-sm text-red-300" role="alert">
                 {error}
               </p>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-full bg-foreground text-sm font-medium text-background disabled:opacity-50"
+              className="h-11 w-full rounded-full bg-accent text-sm font-semibold text-accent-ink disabled:opacity-50"
             >
               {loading ? "Guardando…" : "Guardar contraseña"}
             </button>

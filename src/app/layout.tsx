@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
-import PwaRegister from "@/components/PwaRegister";
-import InstallPrompt from "@/components/InstallPrompt";
+import { cookies } from "next/headers";
+import AgeGate from "@/components/AgeGate";
+import { AGE_COOKIE } from "@/lib/constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,38 +27,24 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Yesart-betur | Arte original y murales a medida",
-    template: "%s | Yesart-betur",
+    default: "Aura | Explora tu universo",
+    template: "%s | Aura",
   },
   description:
-    "La plataforma donde artistas independientes exhiben sus obras y ofrecen servicios de murales. Compra arte auténtico o contrata artistas para tu espacio.",
-  keywords: [
-    "arte contemporáneo",
-    "murales",
-    "comprar arte",
-    "artistas independientes",
-    "galería online",
-    "arte original",
-  ],
-  authors: [{ name: "Yesart-betur" }],
-  creator: "Yesart-betur",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-  ),
+    "Suscríbete a creadores independientes, desbloquea contenido exclusivo, envía propinas y conversa directamente con ellos. Plataforma solo para mayores de 18 años.",
+  keywords: ["creadores", "suscripciones", "contenido exclusivo", "propinas", "mensajes directos"],
+  authors: [{ name: "Aura" }],
+  creator: "Aura",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   openGraph: {
-    title: "Yesart-betur",
-    description: "Arte original y murales a medida de artistas independientes",
+    title: "Aura",
+    description: "Apoya a tus creadores favoritos y accede a su contenido exclusivo",
     type: "website",
     locale: "es_MX",
-    siteName: "Yesart-betur",
-    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Yesart-betur" }],
+    siteName: "Aura",
+    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Aura" }],
   },
-  twitter: {
-    card: "summary",
-    title: "Yesart-betur",
-    description: "Arte original y murales a medida",
-    images: ["/icon-512.png"],
-  },
+  twitter: { card: "summary", title: "Aura", description: "Apoya a tus creadores favoritos", images: ["/icon-512.png"] },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -68,30 +55,22 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.webmanifest",
-  applicationName: "Yesart-betur",
-  formatDetection: { telephone: false },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Yesart-betur",
-  },
+  // Contenido para adultos: se pide a los buscadores que lo traten como tal
+  other: { rating: "adult" },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf9f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f0f0f" },
-  ],
+  themeColor: "#0d0b09",
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const ageOk = (await cookies()).get(AGE_COOKIE)?.value === "1";
   return (
     <html
       lang="es-MX"
@@ -99,8 +78,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
-        <PwaRegister />
-        <InstallPrompt />
+        {!ageOk && <AgeGate />}
       </body>
     </html>
   );

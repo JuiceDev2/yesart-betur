@@ -1,5 +1,10 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+
+const PROTECTED = [
+  "/feed", "/subscriptions", "/messages", "/studio", "/become-creator",
+  "/admin", "/settings", "/account",
+];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -12,9 +17,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(
-          cookiesToSet: { name: string; value: string; options: CookieOptions }[]
-        ) {
+        setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
@@ -30,43 +33,31 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+  const needsAuth = PROTECTED.some((p) => path === p || path.startsWith(p + "/"));
+  if (!needsAuth) return supabaseResponse;
 
-  const protectedPrefixes = ["/dashboard", "/admin", "/artist", "/become-artist", "/account"];
-  const needsAuth = protectedPrefixes.some((p) => path.startsWith(p));
-
-  if (!user && needsAuth) {
+  const redirectTo = (pathname: string, params?: Record<string, string>) => {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", path);
+    url.pathname = pathname;
+    url.search = "";
+    for (const [k, v] of Object.entries(params ?? {})) url.searchParams.set(k, v);
     return NextResponse.redirect(url);
-  }
+  };
 
-  if (user && (path.startsWith("/admin") || path.startsWith("/artist"))) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, is_active")
-      .eq("id", user.id)
-      .single();
+  if (!user) return redirectTo("/login", { next: path });
 
-    if (path.startsWith("/admin") && profile?.role !== "admin") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, is_active")
+    .eq("id", user.id)
+    .single();
 
-    if (path.startsWith("/artist")) {
-      if (profile?.role !== "artist") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/become-artist";
-        return NextResponse.redirect(url);
-      }
-      if (!profile.is_active) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/login";
-        url.searchParams.set("error", "disabled");
-        return NextResponse.redirect(url);
-      }
-    }
+  if (!profile || !profile.is_active) return redirectTo("/login", { error: "disabled" });
+
+  if (path.startsWith("/admin") && profile.role !== "admin") return redirectTo("/");
+  if (path.startsWith("/studio") && profile.role !== "creator") return redirectTo("/become-creator");
+  if (path.startsWith("/become-creator") && profile.role !== "fan") {
+    return redirectTo(profile.role === "creator" ? "/studio" : "/admin");
   }
 
   return supabaseResponse;

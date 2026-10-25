@@ -95,11 +95,12 @@ export function SearchBox({
 }
 
 const PILL: Record<string, string> = {
-  green: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-  yellow: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
-  blue: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  red: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-  gray: "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
+  green: "bg-emerald-500/15 text-emerald-300",
+  yellow: "bg-amber-500/15 text-amber-300",
+  blue: "bg-sky-500/15 text-sky-300",
+  red: "bg-red-500/15 text-red-300",
+  pink: "bg-accent/15 text-accent",
+  gray: "bg-white/10 text-neutral-300",
 };
 
 export function Pill({

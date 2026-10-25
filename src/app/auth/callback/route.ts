@@ -4,11 +4,11 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const nextRaw = searchParams.get("next") || "/dashboard";
+  const nextRaw = searchParams.get("next") || "/feed";
 
   // Open-redirect protection: only relative internal paths
   const next =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/dashboard";
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/feed";
 
   if (code) {
     const supabase = await createClient();

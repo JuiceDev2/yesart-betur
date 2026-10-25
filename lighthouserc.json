@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000/", "http://localhost:3000/gallery", "http://localhost:3000/privacy"],
+      "url": ["http://localhost:3000/", "http://localhost:3000/explore", "http://localhost:3000/privacy"],
       "numberOfRuns": 1,
       "startServerCommand": "npm start",
       "startServerReadyPattern": "Ready",

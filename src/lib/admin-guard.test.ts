@@ -29,7 +29,7 @@ describe("requireAdminApi", () => {
 
   it("403 si no es admin", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
-    single.mockResolvedValue({ data: { role: "artist", is_active: true } });
+    single.mockResolvedValue({ data: { role: "creator", is_active: true } });
     const r = await requireAdminApi();
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.status).toBe(403);

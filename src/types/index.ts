@@ -1,91 +1,129 @@
-export type UserRole = "admin" | "artist" | "client";
+export type UserRole = "admin" | "creator" | "fan";
 
 export interface Profile {
   id: string;
   email: string | null;
-  full_name: string | null;
-  phone: string | null;
+  username: string;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
   role: UserRole;
-  bio: string | null;
-  avatar_url: string | null;
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PublicArtist {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
+  age_confirmed_at: string | null;
+  terms_accepted_at: string | null;
   created_at: string;
 }
 
-export interface Artwork {
-  id: string;
-  artist_id: string;
-  title: string;
-  description: string | null;
-  price: number;
-  image_url: string | null;
+export interface CreatorSettings {
+  user_id: string;
+  price_cents: number;
   category: string | null;
-  status: "available" | "sold" | "reserved";
-  is_hidden: boolean;
-  created_at: string;
-  updated_at?: string;
-  artist?: PublicArtist | Profile | null;
+  is_nsfw: boolean;
+  welcome_message: string | null;
+  status: "active" | "suspended";
+  suspended_reason: string | null;
 }
 
-export interface Service {
+/** Fila de la vista public_creators. */
+export interface PublicCreator {
   id: string;
-  artist_id: string;
-  title: string;
-  description: string | null;
-  price_per_hour: number;
-  image_url: string | null;
-  is_active: boolean;
-  is_hidden: boolean;
+  username: string;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+  price_cents: number;
+  category: string | null;
+  is_nsfw: boolean;
   created_at: string;
-  updated_at?: string;
-  artist?: PublicArtist | Profile | null;
+  post_count: number;
+  last_post_at: string | null;
 }
 
-export interface Order {
+/** Fila devuelta por la función get_feed. */
+export interface FeedPost {
   id: string;
-  client_name: string;
-  client_phone: string;
-  client_user_id: string | null;
-  artwork_id: string | null;
-  service_id: string | null;
-  artist_id: string;
-  status: "pending" | "contacted" | "completed" | "cancelled";
-  notes: string | null;
-  created_at: string;
-  updated_at?: string;
-  artwork?: Artwork | null;
-  service?: Service | null;
-  artist?: Profile | PublicArtist | null;
+  creator_id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  body: string | null;
+  teaser: string | null;
+  visibility: "free" | "subscribers" | "ppv";
+  price_cents: number | null;
+  is_nsfw: boolean;
+  is_hidden: boolean;
+  published_at: string;
+  like_count: number;
+  comment_count: number;
+  locked: boolean;
+  liked: boolean;
+  image_count: number;
+  video_count: number;
 }
 
-export interface ArtistApplication {
+export interface PostMedia {
+  id: string;
+  post_id: string;
+  path: string;
+  kind: "image" | "video";
+  position: number;
+}
+
+export interface CommentRow {
   id: string;
   user_id: string;
-  portfolio_url: string | null;
-  message: string | null;
-  status: "pending" | "approved" | "rejected";
-  reviewed_by: string | null;
-  reviewed_at: string | null;
-  review_note?: string | null;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  body: string;
+  created_at: string;
+  mine: boolean;
+  can_delete: boolean;
+}
+
+export interface SubscriptionRow {
+  id: string;
+  creator_id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  status: "active" | "past_due" | "canceled" | "expired";
+  price_cents: number;
+  provider: string;
+  cancel_at_period_end: boolean;
+  current_period_end: string;
   created_at: string;
 }
 
-export interface GalleryFilters {
-  q?: string;
-  category?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  artistId?: string;
-  sort?: "recent" | "price_asc" | "price_desc";
-  page?: number;
-  pageSize?: number;
+export interface Balance {
+  earned_cents: number;
+  available_cents: number;
+  hold_cents: number;
+  pending_payout_cents: number;
+  paid_out_cents: number;
+  min_payout_cents: number;
+  currency: string;
+}
+
+export interface ConversationRow {
+  other_id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  last_body: string;
+  last_at: string;
+  last_from_me: boolean;
+  unread: number;
+  can_reply: boolean;
+}
+
+export interface MessageRow {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
 }

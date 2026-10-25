@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 export default function DeleteAccountPage() {
   const [confirm, setConfirm] = useState("");
@@ -42,8 +43,8 @@ export default function DeleteAccountPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
-          <Link href="/" className="font-serif text-xl font-semibold">
-            Yesart<span className="text-accent">-betur</span>
+          <Link href="/" className="inline-flex">
+            <Logo />
           </Link>
         </div>
       </header>
@@ -52,11 +53,9 @@ export default function DeleteAccountPage() {
           <p className="text-center text-sm text-muted">Cuenta eliminada. Redirigiendo…</p>
         ) : (
           <>
-            <h1 className="font-serif text-2xl font-medium">Eliminar cuenta</h1>
+            <h1 className="text-2xl font-medium">Eliminar cuenta</h1>
             <p className="mt-3 text-sm text-muted">
-              Se eliminará tu perfil y se cerrará la sesión. Las órdenes históricas pueden
-              conservarse anonimizadas según el aviso de privacidad.
-            </p>
+              Se eliminará tu perfil, tus publicaciones y archivos, y se cancelarán tus suscripciones activas. Los registros de pagos se conservan sin tus datos personales por obligación contable. Si eres creador, primero debes retirar tu saldo.</p>
             <form onSubmit={handleDelete} className="mt-8 space-y-4">
               <div>
                 <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium">
@@ -70,7 +69,7 @@ export default function DeleteAccountPage() {
                 />
               </div>
               {error && (
-                <p className="text-sm text-red-600" role="alert">
+                <p className="text-sm text-red-300" role="alert">
                   {error}
                 </p>
               )}

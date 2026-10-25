@@ -1,62 +1,74 @@
 import Link from "next/link";
+import { getCurrentProfile } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import Avatar from "@/components/Avatar";
+import LogoutButton from "@/components/LogoutButton";
+import Logo from "@/components/Logo";
 
-interface SiteHeaderProps {
-  /** Muestra el enlace «Artistas» solo si hay artistas reales que enseñar. */
-  hasArtists?: boolean;
-}
-
-const LINK = "transition-colors hover:text-foreground";
+const linkCls = "rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:text-foreground";
 
 /**
- * Encabezado público. Es un componente de servidor: el menú móvil usa
- * <details>, así funciona sin JavaScript y es accesible con teclado.
+ * Cabecera única de la app (componente de servidor). Muestra enlaces según el rol y
+ * un menú móvil con <details>: funciona sin JavaScript y es accesible con teclado.
  */
-export default function SiteHeader({ hasArtists = false }: SiteHeaderProps) {
-  const links = [
-    { href: "/gallery", label: "Obras" },
-    { href: "/#servicios", label: "Murales y servicios" },
-    ...(hasArtists ? [{ href: "/#artistas", label: "Artistas" }] : []),
-    { href: "/#como-funciona", label: "Cómo funciona" },
-    { href: "/#faq", label: "Preguntas" },
-  ];
+export default async function SiteHeader() {
+  const profile = await getCurrentProfile();
+  let unread = 0;
+  if (profile) {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc("unread_count");
+    unread = typeof data === "number" ? data : 0;
+  }
+
+  const links: Array<{ href: string; label: string }> = [{ href: "/explore", label: "Explorar" }];
+  if (profile) {
+    links.push({ href: "/feed", label: "Mi feed" });
+    links.push({ href: "/messages", label: unread > 0 ? `Mensajes (${unread})` : "Mensajes" });
+    links.push({ href: "/subscriptions", label: "Suscripciones" });
+    if (profile.role === "creator") links.push({ href: "/studio", label: "Estudio" });
+    if (profile.role === "admin") links.push({ href: "/admin", label: "Admin" });
+  }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-        <Link href="/" className="font-serif text-2xl font-semibold tracking-tight">
-          Yesart<span className="text-accent">-betur</span>
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <Link href="/" className="inline-flex" aria-label="Aura, inicio">
+          <Logo />
         </Link>
 
-        <nav
-          aria-label="Principal"
-          className="hidden items-center gap-8 text-sm font-medium text-muted lg:flex"
-        >
+        <nav aria-label="Principal" className="hidden items-center gap-1 lg:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className={LINK}>
+            <Link key={l.href} href={l.href} className={linkCls}>
               {l.label}
             </Link>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/become-artist"
-            className="hidden text-sm font-medium text-muted transition-colors hover:text-foreground xl:inline-flex"
-          >
-            ¿Eres artista?
-          </Link>
-          <Link
-            href="/login"
-            className="hidden text-sm font-medium text-muted transition-colors hover:text-foreground sm:inline-flex"
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/register"
-            className="inline-flex h-9 items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-opacity hover:opacity-90"
-          >
-            Crear cuenta
-          </Link>
+        <div className="flex items-center gap-2">
+          {profile ? (
+            <>
+              <Link
+                href="/settings"
+                className="hidden items-center gap-2 rounded-full border border-border py-1 pl-1 pr-3 text-sm sm:flex"
+              >
+                <Avatar url={profile.avatar_url} name={profile.display_name || profile.username} size={28} />
+                <span className="max-w-28 truncate">@{profile.username}</span>
+              </Link>
+              <LogoutButton className="hidden h-9 rounded-full px-3 text-sm text-muted hover:text-foreground lg:block" />
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="hidden h-9 items-center rounded-full px-4 text-sm text-muted hover:text-foreground sm:inline-flex">
+                Entrar
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex h-9 items-center rounded-full bg-accent px-5 text-sm font-semibold text-accent-ink transition-opacity hover:opacity-90"
+              >
+                Crear cuenta
+              </Link>
+            </>
+          )}
 
           <details className="group relative lg:hidden">
             <summary
@@ -64,36 +76,43 @@ export default function SiteHeader({ hasArtists = false }: SiteHeaderProps) {
               className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full border border-border [&::-webkit-details-marker]:hidden"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M4 7h16M4 12h16M4 17h16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </summary>
-            <div className="absolute right-0 top-12 w-64 rounded-2xl border border-border bg-background p-3 shadow-xl">
+            <div className="absolute right-0 top-12 w-64 rounded-2xl border border-border bg-card p-3 shadow-2xl">
               <ul className="space-y-1 text-sm">
                 {links.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} className="block rounded-lg px-3 py-2 hover:bg-accent-soft/50">
+                    <Link href={l.href} className="block rounded-lg px-3 py-2 hover:bg-accent-soft">
                       {l.label}
                     </Link>
                   </li>
                 ))}
-                <li className="border-t border-border pt-1">
-                  <Link href="/login" className="block rounded-lg px-3 py-2 hover:bg-accent-soft/50">
-                    Entrar
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/become-artist"
-                    className="block rounded-lg px-3 py-2 hover:bg-accent-soft/50"
-                  >
-                    ¿Eres artista?
-                  </Link>
-                </li>
+                {profile ? (
+                  <>
+                    <li className="border-t border-border pt-1">
+                      <Link href="/settings" className="block rounded-lg px-3 py-2 hover:bg-accent-soft">
+                        Ajustes
+                      </Link>
+                    </li>
+                    {profile.role === "fan" && (
+                      <li>
+                        <Link href="/become-creator" className="block rounded-lg px-3 py-2 text-accent hover:bg-accent-soft">
+                          Quiero ser creador
+                        </Link>
+                      </li>
+                    )}
+                    <li>
+                      <LogoutButton className="block w-full rounded-lg px-3 py-2 text-left hover:bg-accent-soft" />
+                    </li>
+                  </>
+                ) : (
+                  <li className="border-t border-border pt-1">
+                    <Link href="/login" className="block rounded-lg px-3 py-2 hover:bg-accent-soft">
+                      Entrar
+                    </Link>
+                  </li>
+                )}
               </ul>
             </div>
           </details>

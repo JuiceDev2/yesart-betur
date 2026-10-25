@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const rpc = vi.fn();
+const remove = vi.fn();
 
 vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({ rpc }),
+  createAdminClient: () => ({ rpc, storage: { from: () => ({ remove }) } }),
 }));
 
 import { GET } from "./route";
@@ -19,7 +20,9 @@ describe("GET /api/cron/cleanup", () => {
 
   beforeEach(() => {
     rpc.mockReset();
-    rpc.mockResolvedValue({ error: null });
+    remove.mockReset();
+    rpc.mockResolvedValue({ data: null, error: null });
+    remove.mockResolvedValue({ error: null });
     process.env.CRON_SECRET = SECRET;
   });
 
@@ -35,14 +38,9 @@ describe("GET /api/cron/cleanup", () => {
     expect((await call({ authorization: "Bearer corto" })).status).toBe(500);
   });
 
-  it("401 sin Authorization", async () => {
+  it("401 sin Authorization y con x-vercel-cron falsificado (regresión)", async () => {
     expect((await call()).status).toBe(401);
-    expect(rpc).not.toHaveBeenCalled();
-  });
-
-  it("401 con el encabezado x-vercel-cron falsificado (regresión)", async () => {
-    const res = await call({ "x-vercel-cron": "1" });
-    expect(res.status).toBe(401);
+    expect((await call({ "x-vercel-cron": "1" })).status).toBe(401);
     expect(rpc).not.toHaveBeenCalled();
   });
 
@@ -51,19 +49,36 @@ describe("GET /api/cron/cleanup", () => {
     expect((await call({ authorization: SECRET })).status).toBe(401);
   });
 
-  it("200 con el Bearer correcto y ejecuta ambas limpiezas", async () => {
+  it("200 con el Bearer correcto y ejecuta todas las tareas", async () => {
     const res = await call({ authorization: `Bearer ${SECRET}` });
     expect(res.status).toBe(200);
-    expect(rpc).toHaveBeenCalledWith("cleanup_rate_limits");
-    expect(rpc).toHaveBeenCalledWith("cleanup_old_audit", { p_days: 180 });
+    const names = rpc.mock.calls.map((c) => c[0]);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "cleanup_rate_events", "cleanup_old_audit", "expire_subscriptions", "orphan_media_paths", "kyc_to_purge",
+      ])
+    );
   });
 
-  it("500 si una limpieza falla, sin lanzar excepción", async () => {
-    rpc.mockResolvedValueOnce({ error: null });
-    rpc.mockResolvedValueOnce({ error: { message: "boom" } });
+  it("borra huérfanos y marca KYC purgado", async () => {
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === "orphan_media_paths") return { data: ["a/b/c.jpg"], error: null };
+      if (fn === "kyc_to_purge") return { data: [{ app_id: "app1", paths: ["u/id.jpg"] }], error: null };
+      return { data: null, error: null };
+    });
+    const res = await call({ authorization: `Bearer ${SECRET}` });
+    expect(res.status).toBe(200);
+    expect(remove).toHaveBeenCalledWith(["a/b/c.jpg"]);
+    expect(remove).toHaveBeenCalledWith(["u/id.jpg"]);
+    expect(rpc).toHaveBeenCalledWith("mark_kyc_purged", { p_app_ids: ["app1"] });
+  });
+
+  it("500 si una tarea falla, sin lanzar excepción", async () => {
+    rpc.mockImplementation(async (fn: string) =>
+      fn === "expire_subscriptions" ? { data: null, error: { message: "boom" } } : { data: null, error: null }
+    );
     const res = await call({ authorization: `Bearer ${SECRET}` });
     expect(res.status).toBe(500);
-    const body = (await res.json()) as { ok: boolean };
-    expect(body.ok).toBe(false);
+    expect(((await res.json()) as { ok: boolean }).ok).toBe(false);
   });
 });

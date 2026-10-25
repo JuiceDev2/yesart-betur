@@ -1,89 +1,55 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import LegalShell, { CONTACT_EMAIL } from "@/components/LegalShell";
 
-export const metadata: Metadata = {
-  title: "Aviso de privacidad",
-  description: "Cómo Yesart-betur trata tus datos personales",
-};
+export const metadata: Metadata = { title: "Aviso de privacidad" };
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-3xl items-center px-6">
-          <Link href="/" className="font-serif text-xl font-semibold">
-            Yesart<span className="text-accent">-betur</span>
-          </Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-3xl px-6 py-12 prose-sm">
-        <h1 className="font-serif text-3xl font-medium">Aviso de privacidad</h1>
-        <p className="mt-4 text-sm text-muted">Última actualización: octubre 2026</p>
+    <LegalShell title="Aviso de privacidad" updated="octubre de 2026">
+      <p>
+        Este aviso explica qué datos trata Aura, para qué y cuáles son tus derechos. Responsable: el operador de la plataforma
+        (contacto: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>).
+      </p>
 
-        <section className="mt-10 space-y-4 text-sm leading-relaxed text-muted">
-          <p>
-            Yesart-betur (&ldquo;nosotros&rdquo;) opera una plataforma que conecta artistas y
-            personas interesadas en obras o murales. No procesamos pagos en línea.
-          </p>
+      <h2>Datos que tratamos</h2>
+      <ul>
+        <li><strong>Cuenta:</strong> correo, nombre de usuario, nombre para mostrar, foto, biografía y la confirmación de mayoría de edad.</li>
+        <li><strong>Actividad:</strong> suscripciones, compras, propinas, mensajes, comentarios, reportes y bloqueos.</li>
+        <li><strong>Creadores:</strong> nombre legal, fecha de nacimiento, país, identificación y selfie de verificación, y datos de la cuenta de cobro.</li>
+        <li><strong>Pagos:</strong> los procesa un proveedor externo; nosotros no almacenamos números de tarjeta.</li>
+        <li><strong>Técnicos:</strong> registros de seguridad y límites de uso para prevenir abuso.</li>
+      </ul>
 
-          <h2 className="pt-4 font-medium text-foreground">Datos que tratamos</h2>
-          <ul className="list-disc space-y-2 pl-5">
-            <li>
-              <strong className="text-foreground">Cuenta:</strong> email, nombre, rol
-              (cliente/artista/admin).
-            </li>
-            <li>
-              <strong className="text-foreground">Solicitudes de compra:</strong> nombre
-              completo y teléfono que indiques en el formulario, y notas opcionales.
-              Se asocian a la obra o servicio y al artista correspondiente.
-            </li>
-            <li>
-              <strong className="text-foreground">Seguridad técnica:</strong> dirección IP
-              (solo para limitar abusos de solicitudes, no se muestra a otros usuarios).
-            </li>
-            <li>
-              <strong className="text-foreground">Contenido de artistas:</strong> obras,
-              servicios e imágenes que suben.
-            </li>
-          </ul>
+      <h2>Para qué los usamos</h2>
+      <ul>
+        <li>Operar la plataforma, cobrar y pagar a los creadores.</li>
+        <li>Verificar la edad y la identidad de los creadores y moderar contenido.</li>
+        <li>Prevenir fraude y abuso, y cumplir obligaciones legales y fiscales.</li>
+      </ul>
 
-          <h2 className="pt-4 font-medium text-foreground">Finalidad</h2>
-          <p>
-            Contactar sobre solicitudes de compra o contratación; operar la cuenta;
-            moderar la plataforma; prevenir abuso (límites por teléfono, usuario e IP).
-          </p>
+      <h2>Verificación de identidad</h2>
+      <p>
+        Los documentos de verificación se guardan en almacenamiento privado, solo los ve el equipo de administración y se
+        eliminan automáticamente a los 30 días de resolver la solicitud. Conservamos únicamente el resultado de la revisión.
+      </p>
 
-          <h2 className="pt-4 font-medium text-foreground">Conservación</h2>
-          <p>
-            Las solicitudes se conservan mientras sean necesarias para el trato
-            artista–cliente y la operación del servicio. Los registros de límites de
-            frecuencia se depuran periódicamente (aprox. 48 h). Puedes solicitar la
-            eliminación de tu cuenta en{" "}
-            <Link href="/account/delete" className="text-accent underline">
-              /account/delete
-            </Link>
-            .
-          </p>
+      <h2>Con quién los compartimos</h2>
+      <p>
+        Proveedores que nos prestan servicio (alojamiento, base de datos, correo y pagos) y autoridades cuando la ley lo exija.
+        No vendemos tus datos.
+      </p>
 
-          <h2 className="pt-4 font-medium text-foreground">Encargados</h2>
-          <p>
-            Infraestructura: Vercel (hosting) y Supabase (base de datos, autenticación y
-            almacenamiento). Correo transaccional opcional vía Resend si está configurado.
-          </p>
+      <h2>Tus derechos</h2>
+      <p>
+        Puedes acceder, rectificar, cancelar u oponerte al tratamiento de tus datos. Puedes eliminar tu cuenta desde{" "}
+        <a href="/account/delete">Eliminar cuenta</a>; los registros de pagos se conservan sin datos personales por obligación
+        contable. Para otras solicitudes escribe a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+      </p>
 
-          <h2 className="pt-4 font-medium text-foreground">Contacto</h2>
-          <p>
-            Para ejercer derechos de acceso, rectificación o eliminación, contacta al
-            operador del sitio a través del correo publicado en el dominio de producción.
-          </p>
-        </section>
-
-        <p className="mt-12">
-          <Link href="/terms" className="text-sm text-accent underline">
-            Términos de uso
-          </Link>
-        </p>
-      </main>
-    </div>
+      <h2>Cookies</h2>
+      <p>
+        Usamos cookies estrictamente necesarias: sesión y la confirmación de que eres mayor de edad. No usamos cookies de publicidad.
+      </p>
+    </LegalShell>
   );
 }

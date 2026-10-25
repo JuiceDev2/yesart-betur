@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Logo from "@/components/Logo";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -25,8 +26,8 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
-          <Link href="/" className="font-serif text-xl font-semibold">
-            Yesart<span className="text-accent">-betur</span>
+          <Link href="/" className="inline-flex">
+            <Logo />
           </Link>
         </div>
       </header>
@@ -34,7 +35,7 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md">
           {sent ? (
             <div className="space-y-4 text-center">
-              <h1 className="font-serif text-2xl font-medium">Revisa tu correo</h1>
+              <h1 className="text-2xl font-medium">Revisa tu correo</h1>
               <p className="text-sm text-muted">
                 Si existe una cuenta con ese correo, enviamos un enlace para restablecer
                 la contraseña.
@@ -45,7 +46,7 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <>
-              <h1 className="mb-2 text-center font-serif text-3xl font-medium">
+              <h1 className="mb-2 text-center text-3xl font-medium">
                 Olvidé mi contraseña
               </h1>
               <p className="mb-8 text-center text-sm text-muted">
@@ -69,7 +70,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="h-11 w-full rounded-full bg-foreground text-sm font-medium text-background disabled:opacity-50"
+                  className="h-11 w-full rounded-full bg-accent text-sm font-semibold text-accent-ink disabled:opacity-50"
                 >
                   {loading ? "Enviando…" : "Enviar enlace"}
                 </button>

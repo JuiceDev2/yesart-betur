@@ -1,23 +1,27 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { extensionForType } from "@/lib/validation";
 
-interface ImageUploadProps {
-  bucket?: string;
-  folder?: string;
-  currentUrl?: string | null;
-  onUpload: (url: string) => void;
-  className?: string;
-}
+const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+/** Sube una imagen al bucket público "avatars" (carpeta = id del usuario) y devuelve su URL. */
 export default function ImageUpload({
-  bucket = "artworks",
-  folder = "",
+  folder,
   currentUrl,
   onUpload,
+  aspect = "aspect-square",
+  label = "Subir imagen",
   className = "",
-}: ImageUploadProps) {
+}: {
+  folder: string;
+  currentUrl?: string | null;
+  onUpload: (url: string) => void;
+  aspect?: string;
+  label?: string;
+  className?: string;
+}) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentUrl || null);
   const [error, setError] = useState<string | null>(null);
@@ -26,96 +30,65 @@ export default function ImageUpload({
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate
-    if (!file.type.startsWith("image/")) {
-      setError("Solo se permiten imágenes");
+    if (!OK_TYPES.includes(file.type)) {
+      setError("Solo JPG, PNG o WebP");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       setError("Máximo 5 MB");
       return;
     }
-
     setError(null);
     setUploading(true);
-
-    // Local preview
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
 
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop();
-      const fileName = `${folder ? folder + "/" : ""}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
+      const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extensionForType(file.type)}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(name, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
       const {
         data: { publicUrl },
-      } = supabase.storage.from(bucket).getPublicUrl(fileName);
-
+      } = supabase.storage.from("avatars").getPublicUrl(name);
       onUpload(publicUrl);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al subir";
-      setError(message);
+      setError(err instanceof Error ? err.message : "Error al subir");
       setPreview(currentUrl || null);
     } finally {
       setUploading(false);
+      URL.revokeObjectURL(objectUrl);
     }
   }
 
   return (
     <div className={className}>
-      <div
+      <button
+        type="button"
         onClick={() => inputRef.current?.click()}
-        className="relative aspect-[4/3] rounded-xl border-2 border-dashed border-border bg-background cursor-pointer overflow-hidden hover:border-accent/50 transition-colors group"
+        aria-label={label}
+        className={`group relative block w-full overflow-hidden rounded-2xl border-2 border-dashed border-border bg-card ${aspect} hover:border-accent/60`}
       >
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={preview}
-            alt="Preview"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-muted">
-            <span className="text-3xl mb-2">📷</span>
-            <span className="text-sm">Click para subir imagen</span>
-            <span className="text-xs mt-1">JPG, PNG · máx 5 MB</span>
-          </div>
+          <span className="absolute inset-0 flex flex-col items-center justify-center text-muted">
+            <span className="text-2xl" aria-hidden="true">＋</span>
+            <span className="mt-1 text-xs">{label}</span>
+          </span>
         )}
-
         {uploading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white text-sm font-medium">Subiendo…</span>
-          </div>
+          <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-medium">Subiendo…</span>
         )}
-
-        {preview && !uploading && (
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <span className="text-white text-sm font-medium">Cambiar imagen</span>
-          </div>
-        )}
-      </div>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-
+      </button>
+      <input ref={inputRef} type="file" accept={OK_TYPES.join(",")} onChange={handleFileChange} className="hidden" />
       {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="mt-2 text-xs text-red-300">
+          {error}
+        </p>
       )}
     </div>
   );

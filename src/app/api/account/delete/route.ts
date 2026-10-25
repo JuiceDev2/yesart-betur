@@ -1,45 +1,58 @@
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getProviderByName } from "@/lib/payments";
+
+export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({ confirm: z.literal("ELIMINAR") });
 
+type Admin = ReturnType<typeof createAdminClient>;
+
+/** Borra todos los archivos de una carpeta {uid}/... de un bucket (best-effort, por páginas). */
+async function purgeFolder(admin: Admin, bucket: string, folder: string) {
+  const walk = async (prefix: string): Promise<string[]> => {
+    const out: string[] = [];
+    const { data } = await admin.storage.from(bucket).list(prefix, { limit: 1000 });
+    for (const item of data ?? []) {
+      const path = `${prefix}/${item.name}`;
+      if (item.id) out.push(path);
+      else out.push(...(await walk(path)));
+    }
+    return out;
+  };
+  const paths = await walk(folder);
+  for (let i = 0; i < paths.length; i += 100) {
+    await admin.storage.from(bucket).remove(paths.slice(i, i + 100));
+  }
+}
+
 /**
- * Elimina la cuenta del usuario autenticado.
- *
- * Orden pensado para que NUNCA quede una cuenta "a medias":
- *  1. Validaciones (confirmación, último admin).
- *  2. Se anotan las órdenes donde era cliente (para anonimizarlas después).
- *  3. Se borra el usuario de Auth (el perfil, obras y servicios caen en cascada;
- *     las órdenes conservan su historial con artist_id / client_user_id en NULL).
- *  4. Limpieza best-effort: imágenes en Storage y datos personales en órdenes.
+ * Elimina la cuenta del usuario autenticado, en un orden que nunca deja cobros huérfanos:
+ *  1. Validaciones (confirmación, último admin, saldo o retiro pendiente de un creador).
+ *  2. Se cancelan los cobros automáticos (los suyos y, si es creador, los de sus suscriptores).
+ *     Si el proveedor falla, se aborta ANTES de borrar nada.
+ *  3. Limpieza de archivos en Storage (best-effort).
+ *  4. Se borra el usuario de Auth; el perfil y su contenido caen en cascada. El libro de
+ *     transacciones se conserva por obligaciones contables, sin vínculo a la persona.
  */
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  if (!user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
-  const parsed = bodySchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
+  if (!bodySchema.safeParse(await request.json().catch(() => null)).success) {
     return NextResponse.json({ error: "Escribe ELIMINAR para confirmar" }, { status: 400 });
   }
 
-  const service = createAdminClient();
-
-  const { data: profile } = await service
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+  const admin = createAdminClient();
+  const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).maybeSingle();
 
   if (profile?.role === "admin") {
-    const { count } = await service
+    const { count } = await admin
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("role", "admin")
@@ -53,13 +66,48 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: ownOrders } = await service
-    .from("orders")
-    .select("id")
-    .eq("client_user_id", user.id);
-  const orderIds = (ownOrders || []).map((o) => o.id as string);
+  if (profile?.role === "creator") {
+    const { data: bal } = await admin.rpc("creator_balance", { p_creator: user.id });
+    const b = Array.isArray(bal) ? bal[0] : bal;
+    if (b && (Number(b.available_cents) > 0 || Number(b.hold_cents) > 0 || Number(b.pending_payout_cents) > 0)) {
+      return NextResponse.json(
+        { error: "Tienes saldo o retiros pendientes. Retira tu saldo (o espera a que se libere) antes de eliminar tu cuenta." },
+        { status: 409 }
+      );
+    }
+  }
 
-  const { error: deleteError } = await service.auth.admin.deleteUser(user.id);
+  // Cobros automáticos a cancelar: como fan y, si es creador, de todos sus suscriptores
+  const { data: subs } = await admin
+    .from("subscriptions")
+    .select("provider, provider_subscription_id")
+    .or(`fan_id.eq.${user.id},creator_id.eq.${user.id}`)
+    .neq("provider", "free")
+    .not("provider_subscription_id", "is", null);
+
+  try {
+    for (const s of subs ?? []) {
+      await getProviderByName(s.provider as string).cancelSubscription(s.provider_subscription_id as string, {
+        immediately: true,
+      });
+    }
+  } catch (e) {
+    console.error("account delete: cancel", e instanceof Error ? e.message : e);
+    return NextResponse.json(
+      { error: "No pudimos cancelar tus suscripciones activas. No se eliminó nada; intenta de nuevo." },
+      { status: 502 }
+    );
+  }
+
+  for (const bucket of ["media", "avatars", "kyc"]) {
+    try {
+      await purgeFolder(admin, bucket, user.id);
+    } catch (e) {
+      console.error("purge", bucket, e instanceof Error ? e.message : e);
+    }
+  }
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
   if (deleteError) {
     console.error("deleteUser", deleteError.message);
     return NextResponse.json(
@@ -68,35 +116,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // --- Limpieza best-effort (la cuenta ya no existe) ---
-  try {
-    if (orderIds.length > 0) {
-      const { error } = await service
-        .from("orders")
-        .update({
-          client_name: "Cuenta eliminada",
-          client_phone: "0000000",
-          notes: null,
-        })
-        .in("id", orderIds);
-      if (error) console.error("anonymize orders", error.message);
-    }
-  } catch (e) {
-    console.error("anonymize orders", e);
-  }
-
-  try {
-    const bucket = service.storage.from("artworks");
-    for (let i = 0; i < 20; i++) {
-      const { data: files } = await bucket.list(user.id, { limit: 100 });
-      if (!files || files.length === 0) break;
-      await bucket.remove(files.map((f) => `${user.id}/${f.name}`));
-      if (files.length < 100) break;
-    }
-  } catch (e) {
-    console.error("storage cleanup", e);
-  }
-
   await supabase.auth.signOut().catch(() => null);
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ ok: true });
 }

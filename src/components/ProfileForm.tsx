@@ -1,153 +1,113 @@
 "use client";
 
 import { useState } from "react";
-import { z } from "zod";
+import { useRouter } from "next/navigation";
+import ImageUpload from "@/components/ImageUpload";
 import { createClient } from "@/lib/supabase/client";
-import { deleteStorageImage } from "@/lib/storage";
-import ImageUpload from "./ImageUpload";
+import { deleteAvatarFile } from "@/lib/storage";
+import { profileSchema } from "@/lib/validation";
 import type { Profile } from "@/types";
 
-const schema = z.object({
-  full_name: z.string().trim().min(2, "Escribe tu nombre").max(120, "Máximo 120 caracteres"),
-  phone: z
-    .string()
-    .trim()
-    .max(30, "Máximo 30 caracteres")
-    .regex(/^[+\d\s()-]*$/, "Solo números, espacios, + ( ) -")
-    .optional(),
-  bio: z.string().trim().max(1000, "Máximo 1000 caracteres").optional(),
-});
+const input =
+  "h-11 w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-accent/40";
 
-/**
- * Perfil público del artista: nombre, bio y foto. Es lo que ve el cliente en
- * /a/[id] y en las tarjetas. Solo escribe columnas permitidas por la base de
- * datos (el trigger protege role / is_active / email).
- */
 export default function ProfileForm({ profile }: { profile: Profile }) {
-  const [fullName, setFullName] = useState(profile.full_name ?? "");
-  const [phone, setPhone] = useState(profile.phone ?? "");
+  const router = useRouter();
+  const [displayName, setDisplayName] = useState(profile.display_name);
+  const [username, setUsername] = useState(profile.username);
   const [bio, setBio] = useState(profile.bio ?? "");
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
-  const [savedAvatar, setSavedAvatar] = useState(profile.avatar_url ?? "");
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [avatar, setAvatar] = useState(profile.avatar_url);
+  const [banner, setBanner] = useState(profile.banner_url);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function save(e: React.FormEvent) {
     e.preventDefault();
-    setFeedback(null);
-
-    const parsed = schema.safeParse({ full_name: fullName, phone, bio });
+    setMsg(null);
+    const parsed = profileSchema.safeParse({ displayName, username, bio });
     if (!parsed.success) {
-      setFeedback({ type: "err", text: parsed.error.issues[0]?.message || "Datos inválidos" });
+      setMsg({ ok: false, text: parsed.error.issues[0]?.message ?? "Datos inválidos" });
       return;
     }
-
-    setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase
+    setSaving(true);
+    const { error } = await createClient()
       .from("profiles")
       .update({
-        full_name: parsed.data.full_name,
-        phone: parsed.data.phone || null,
+        display_name: parsed.data.displayName,
+        username: parsed.data.username,
         bio: parsed.data.bio || null,
-        avatar_url: avatarUrl || null,
+        avatar_url: avatar,
+        banner_url: banner,
       })
       .eq("id", profile.id);
-
+    setSaving(false);
     if (error) {
-      setFeedback({ type: "err", text: error.message });
-      setLoading(false);
+      setMsg({
+        ok: false,
+        text: error.code === "23505" ? "Ese nombre de usuario ya está en uso" : "No se pudo guardar. Intenta de nuevo.",
+      });
       return;
     }
-
-    // Si cambió la foto, se borra la anterior de Storage (best effort).
-    if (savedAvatar && savedAvatar !== avatarUrl) {
-      await deleteStorageImage(savedAvatar);
-    }
-    setSavedAvatar(avatarUrl);
-    setFeedback({ type: "ok", text: "Perfil actualizado" });
-    setLoading(false);
+    if (profile.avatar_url && profile.avatar_url !== avatar) void deleteAvatarFile(profile.avatar_url);
+    if (profile.banner_url && profile.banner_url !== banner) void deleteAvatarFile(profile.banner_url);
+    setMsg({ ok: true, text: "Cambios guardados" });
+    router.refresh();
   }
 
-  const input =
-    "w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:ring-2 focus:ring-accent/40";
-
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-5">
-      <div>
-        <p className="mb-2 text-sm font-medium">Foto de perfil</p>
-        <ImageUpload
-          folder={profile.id}
-          currentUrl={avatarUrl || null}
-          onUpload={setAvatarUrl}
-        />
+    <form onSubmit={save} className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
+        <div>
+          <p className="mb-1.5 text-sm font-medium">Foto</p>
+          <ImageUpload folder={profile.id} currentUrl={avatar} onUpload={setAvatar} label="Subir foto" />
+        </div>
+        <div>
+          <p className="mb-1.5 text-sm font-medium">Portada</p>
+          <ImageUpload folder={profile.id} currentUrl={banner} onUpload={setBanner} aspect="aspect-[3/1]" label="Subir portada" />
+        </div>
       </div>
 
       <div>
-        <label htmlFor="pf-name" className="mb-1.5 block text-sm font-medium">
-          Nombre artístico *
-        </label>
-        <input
-          id="pf-name"
-          required
-          minLength={2}
-          maxLength={120}
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className={`${input} h-11`}
-        />
+        <label htmlFor="displayName" className="mb-1.5 block text-sm font-medium">Nombre público</label>
+        <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={60} className={input} />
       </div>
-
       <div>
-        <label htmlFor="pf-phone" className="mb-1.5 block text-sm font-medium">
-          Teléfono (privado)
-        </label>
-        <input
-          id="pf-phone"
-          type="tel"
-          inputMode="tel"
-          maxLength={30}
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className={`${input} h-11`}
-        />
-        <p className="mt-1 text-xs text-muted">Solo lo ve el equipo de la galería.</p>
+        <label htmlFor="username" className="mb-1.5 block text-sm font-medium">Usuario</label>
+        <div className="flex items-center rounded-xl border border-border bg-card focus-within:ring-2 focus-within:ring-accent/40">
+          <span className="pl-4 text-sm text-muted">@</span>
+          <input
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+            maxLength={24}
+            className="h-11 w-full bg-transparent px-1 pr-4 text-sm outline-none"
+          />
+        </div>
+        <p className="mt-1 text-xs text-muted">3 a 24 caracteres: minúsculas, números y guion bajo.</p>
       </div>
-
       <div>
-        <label htmlFor="pf-bio" className="mb-1.5 block text-sm font-medium">
-          Sobre ti (aparece en tu página pública)
-        </label>
+        <label htmlFor="bio" className="mb-1.5 block text-sm font-medium">Biografía</label>
         <textarea
-          id="pf-bio"
-          rows={5}
-          maxLength={1000}
+          id="bio"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className={`${input} py-3`}
+          maxLength={1000}
+          rows={4}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/40"
         />
-        <p className="mt-1 text-right text-xs text-muted">{bio.length}/1000</p>
       </div>
 
-      {feedback && (
-        <p
-          role="status"
-          className={`rounded-lg px-3 py-2 text-sm ${
-            feedback.type === "ok"
-              ? "bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300"
-              : "bg-red-50 text-red-700 dark:bg-red-950/30"
-          }`}
-        >
-          {feedback.text}
+      {msg && (
+        <p role={msg.ok ? "status" : "alert"} className={`text-sm ${msg.ok ? "text-emerald-300" : "text-red-300"}`}>
+          {msg.text}
         </p>
       )}
-
       <button
         type="submit"
-        disabled={loading}
-        className="h-11 w-full rounded-full bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+        disabled={saving}
+        className="h-11 rounded-full bg-accent px-8 text-sm font-semibold text-accent-ink hover:opacity-90 disabled:opacity-60"
       >
-        {loading ? "Guardando…" : "Guardar perfil"}
+        {saving ? "Guardando…" : "Guardar cambios"}
       </button>
     </form>
   );

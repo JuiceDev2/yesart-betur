@@ -1,30 +1,31 @@
 {
-  "id": "/",
-  "name": "Yesart-betur",
-  "short_name": "Yesart-betur",
-  "description": "Arte original y murales a medida de artistas independientes",
-  "start_url": "/?source=pwa",
-  "scope": "/",
+  "name": "Aura",
+  "short_name": "Aura",
+  "description": "Aura — Explora tu universo. Plataforma de suscripción para creadores.",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#0e0d12",
-  "theme_color": "#c9a227",
+  "background_color": "#0d0b09",
+  "theme_color": "#0d0b09",
   "lang": "es-MX",
-  "dir": "ltr",
-  "categories": ["shopping", "lifestyle", "art"],
+  "orientation": "portrait-primary",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ],
-  "shortcuts": [
     {
-      "name": "Galería",
-      "short_name": "Galería",
-      "description": "Explorar obras y servicios",
-      "url": "/gallery",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

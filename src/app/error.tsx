@@ -16,7 +16,7 @@ export default function Error({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
-      <h1 className="font-serif text-2xl font-medium">Algo salió mal</h1>
+      <h1 className="text-2xl font-medium">Algo salió mal</h1>
       <p className="mt-2 max-w-md text-sm text-muted">
         Ocurrió un error inesperado. Puedes reintentar o volver al inicio.
       </p>
@@ -24,7 +24,7 @@ export default function Error({
         <button
           type="button"
           onClick={reset}
-          className="h-10 rounded-full bg-foreground px-6 text-sm font-medium text-background"
+          className="h-10 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink"
         >
           Reintentar
         </button>

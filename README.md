@@ -1,96 +1,49 @@
-# Yesart-betur
+# Aura — plataforma de suscripción para creadores
 
-Marketplace de arte original y murales. Next.js 15 · TypeScript · Supabase · Tailwind v4 · Vercel.
-Roles: **admin**, **artista**, **cliente**. Los visitantes pueden solicitar una obra o un servicio sin cuenta.
+Versión ligera, robusta y segura de una plataforma tipo OnlyFans, construida sobre la base de Galería Viva:
+**Next.js 15 (App Router) · Supabase (Postgres + RLS + Storage) · Tailwind v4 · TypeScript · zod · Vitest · Playwright**.
 
-## Arranque
+## Identidad visual
 
-```bash
-cp .env.example .env.local     # completar Supabase, SITE_URL y CRON_SECRET
-npm ci
-npm run dev
-```
+Ambar/dorado sobre negro cálido (tokens en `src/app/globals.css`: `--accent` dorado, `--copper`, `--bronze`), logotipo «ΛURΛ» (`src/components/Logo.tsx`), superficie lunar generada con SVG (`.moon`, sin imágenes externas), lema «Explora tu universo» e íconos PWA regenerados. Para cambiar la paleta basta editar los tokens.
 
-### Migraciones Supabase (orden estricto)
+## Qué incluye
 
-1. `20241017000001_init_secure_schema.sql`
-2. `20241017000002_storage_policies.sql`
-3. `20241017000003_security_fixes.sql`
-4. `20241017000004_audit_orders_storage.sql`
-5. `20241017000005_ip_rate_limit.sql`
-6. `20241017000006_lock_create_order.sql`
-7. `20241017000007_indexes_and_retention.sql`
-8. `20241017000008_hardening_and_account_lifecycle.sql`
+- **Fans:** explorar creadores, seguir gratis o suscribirse (mensual), comprar publicaciones sueltas (PPV), propinas, feed, likes, comentarios, mensajes directos, bloqueos y reportes.
+- **Creadores:** solicitud con verificación de edad/identidad (revisión manual), estudio con compositor (texto, fotos y video, vista previa pública, programación, PPV), suscriptores, bloqueo, ganancias, saldo, retiros y cuenta de cobro.
+- **Admin:** resumen, revisión de solicitudes con documentos privados (enlaces de 5 min), creadores (suspender/reactivar), cola de reportes con prioridad, retiros manuales, auditoría y exportación CSV.
+- **Seguridad:** puerta de edad, RLS en todas las tablas, acceso a contenido decidido en la base (`can_view_post`, `can_view_media`), archivos privados con URL firmadas, funciones de dinero solo para `service_role`, webhooks con HMAC e idempotencia, límites de uso, cron solo con `Bearer CRON_SECRET`, CSP y cabeceras.
 
-La **008 es obligatoria**: arregla el alta del primer admin (el trigger de protección bloqueaba incluso al SQL editor), borra las versiones antiguas de `create_order`, hace que `orders.artist_id` sobreviva al borrado de un artista y añade las funciones de admin con auditoría y la protección del último administrador.
+## Puesta en marcha
 
-Auth → Redirect URLs: `https://TU-DOMINIO/auth/callback` y `http://localhost:3000/auth/callback`.
+1. Crea un proyecto en Supabase y aplica las migraciones **en orden** (`supabase/migrations/20250101000001…05`) con `supabase db push` o el SQL editor.
+2. `cp .env.example .env.local` y completa las variables.
+3. `npm install && npm run dev`.
+4. Convierte tu usuario en administrador (SQL editor): `update public.profiles set role = 'admin' where email = 'tu@correo';`
+5. Despliega en Vercel; `vercel.json` programa el cron diario de limpieza.
 
-Primer administrador (SQL editor de Supabase):
+## Pagos — LEER ANTES DE COBRAR
 
-```sql
-update public.profiles set role = 'admin', is_active = true where email = 'tu@email.com';
-```
+- **Stripe prohíbe el contenido para adultos** en su acuerdo de servicio. Si tu plataforma lo permite, usa un procesador de alto riesgo (CCBill, Segpay, Epoch…) implementando `PaymentProvider` (`src/lib/payments/types.ts`) y traduciendo sus webhooks a las funciones SQL `record_payment`, `record_refund` y `set_subscription_state`. El adaptador de Stripe sirve como referencia (y para plataformas de contenido no adulto).
+- `PAYMENT_PROVIDER=mock` simula cobros **solo en desarrollo**; se bloquea en producción.
+- Los **retiros son manuales**: el admin transfiere y registra la referencia. No hay pagos automáticos a creadores.
+- La **verificación (KYC) es revisión humana** de documentos; no hay proveedor automático de identidad.
+- Los textos legales (`/terms`, `/privacy`, `/content-policy`) son **borradores** que requieren revisión de un abogado. Operar este tipo de plataforma implica obligaciones legales (verificación de edad, registros, retiro de contenido, fiscales) que dependen de tu país.
 
-## Variables de entorno
+## Pruebas — qué está verificado y qué no
 
-Ver `.env.example`. Obligatorias en producción: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL` (https) y **`CRON_SECRET`** (≥ 16 caracteres; sin ella el cron responde 500).
-Opcionales: `RESEND_API_KEY`, `EMAIL_FROM`, `OPS_EMAIL`, `NEXT_PUBLIC_CONTACT_WHATSAPP`, `NEXT_PUBLIC_CONTACT_EMAIL`.
+| Capa | Estado |
+|---|---|
+| Migraciones SQL (5) | Ejecutadas en Postgres 16 real con un stub de Supabase |
+| `supabase/tests/security.test.sql` (100+ aserciones de RLS, triggers, dinero, moderación, storage) | Ejecutada y pasando |
+| Código TypeScript/React | Solo revisión de sintaxis y de que cada import/export exista. **No se ha compilado ni ejecutado** (`npm run typecheck`, `lint`, `build` pendientes) |
+| Vitest (money, validation, stripe, webhook, csv, admin-guard, cron) | Escritos, **sin ejecutar** |
+| Playwright / Lighthouse / job `database` de CI | Escritos, **sin ejecutar** |
+
+Primer paso recomendado: `npm install && npm run typecheck && npm test && npm run build` y corregir lo que aparezca.
 
 ## Scripts
 
-```bash
-npm run lint
-npm run typecheck
-npm test                 # unitarias (vitest); las de base de datos se omiten sin entorno
-npm run build
-npm run test:e2e         # Playwright (smoke público; flow.spec.ts requiere base de pruebas)
-npm run test:rls         # seguridad contra una base Supabase de PRUEBA
-npm run test:lighthouse  # Lighthouse CI (requiere `npm run build` previo)
-```
+`npm run dev | build | lint | typecheck | test | test:e2e | test:rls | test:lighthouse`
 
-### Pruebas de seguridad en base de datos
-
-`src/tests/rls.integration.test.ts` ejecuta contra una base real: escalada de rol, lectura pública, propiedad de obras, `create_order` cerrado al público y límite por teléfono, transiciones de estado, solicitudes de artista, auditoría y último admin.
-
-```bash
-supabase init            # una vez
-supabase start
-eval "$(supabase status -o env | sed 's/^/export /')"
-RLS_TEST_URL=$API_URL RLS_TEST_ANON_KEY=$ANON_KEY RLS_TEST_SERVICE_KEY=$SERVICE_ROLE_KEY npm run test:rls
-```
-
-**Nunca** apuntes estas variables a producción: las pruebas crean y borran usuarios.
-
-## Seguridad (resumen)
-
-- `create_order` solo es ejecutable con la service role, desde `POST /api/orders`; las versiones antiguas se eliminan.
-- Límite por teléfono, usuario e IP. Sin captcha.
-- Cron `GET /api/cron/cleanup`: únicamente `Authorization: Bearer $CRON_SECRET` (comparación en tiempo constante). El encabezado `x-vercel-cron` **no** se acepta.
-- Rutas `/api/admin/*` pasan por `requireAdminApi()` (admin activo) y los datos sensibles (correos) se leen de la base, nunca del cuerpo de la petición.
-- Los correos se envían dentro de `after()`, así no se pierden en serverless.
-- Eliminar cuenta: borra primero el usuario (cascada), luego anonimiza las órdenes propias y limpia Storage; el último admin activo no puede eliminarse.
-- CSP sin `unsafe-eval` en producción, `object-src 'none'`, `upgrade-insecure-requests`.
-- Exportación CSV protegida contra inyección de fórmulas.
-
-## Estado de verificación (honesto)
-
-Esta versión se editó **sin poder ejecutar** `npm install`, `lint`, `typecheck`, `build` ni las pruebas (entorno sin acceso al registro de npm). Antes de desplegar, corre en tu máquina o en CI: `npm ci && npm run lint && npm run typecheck && npm test && npm run build`, aplica la migración 008 y ejecuta `npm run test:rls` contra una base de pruebas. Los jobs de CI (`e2e`, `lighthouse`, `database`) están escritos pero aún no se han visto en verde.
-
-## Observabilidad
-
-`src/instrumentation.ts` registra cada error de servidor como una línea JSON (`onRequestError`). Para Sentry: `npx @sentry/wizard@latest -i nextjs` (añade dependencia; hazlo cuando lo decidas).
-
-## Operación
-
-Ver **RUNBOOK.md**.
-
-## Checklist de despliegue
-
-- [ ] Migraciones 001–008 aplicadas
-- [ ] Bucket de Storage + políticas
-- [ ] Variables en Vercel (incl. `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`)
-- [ ] Auth redirects
-- [ ] Primer admin creado
-- [ ] CI en verde (quality, e2e, lighthouse, database)
-- [ ] Orden de prueba de punta a punta
+Pruebas SQL: `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security.test.sql` (¡solo en una base de pruebas!).

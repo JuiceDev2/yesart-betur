@@ -1,14 +1,20 @@
 @import "tailwindcss";
 
+/* Tema oscuro único: más contraste y un solo conjunto de colores que mantener. */
 :root {
-  --background: #faf9f7;
-  --foreground: #1a1a1a;
-  --muted: #6b6b6b;
-  --accent: #c9a227;
-  --accent-soft: #f5e6c8;
-  --card: #ffffff;
-  --border: #e8e4de;
-  --hero-bg: #0f0f0f;
+  color-scheme: dark;
+  /* Identidad Aura: ámbar sobre negro cálido, inspirada en una superficie lunar. */
+  --background: #0d0b09;
+  --foreground: #f4ede3;
+  --muted: #a99c8a;
+  --accent: #e9a63c;          /* dorado */
+  --accent-ink: #1a1006;      /* texto sobre dorado */
+  --accent-soft: #2b1e0e;
+  --copper: #b5561b;          /* cobre */
+  --bronze: #6b3a1e;          /* bronce */
+  --card: #16120e;
+  --border: #2c241b;
+  --hero-bg: #0a0806;
 }
 
 @theme inline {
@@ -16,6 +22,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
   --color-card: var(--card);
   --color-border: var(--border);
@@ -23,19 +30,6 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-playfair);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0c0c;
-    --foreground: #f5f5f5;
-    --muted: #a0a0a0;
-    --accent: #d4af37;
-    --accent-soft: #2a2418;
-    --card: #161616;
-    --border: #2a2a2a;
-    --hero-bg: #050505;
-  }
 }
 
 html {
@@ -48,35 +42,83 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Elegant selection */
 ::selection {
   background: var(--accent);
-  color: #000;
+  color: var(--accent-ink);
 }
 
-/* Soft gradient text */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .text-gradient {
-  background: linear-gradient(135deg, #c9a227 0%, #e8d48b 50%, #c9a227 100%);
+  background: linear-gradient(135deg, #f6cf7a 0%, #e9a63c 45%, #c8691f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Card hover lift */
 .card-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.25s ease, border-color 0.25s ease;
 }
 .card-lift:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 
-/* Subtle grain overlay for art feel */
-.grain::before {
+/* Contenido bloqueado: degradado sobre patrón, sin cargar ninguna imagen real */
+.locked-pattern {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(233, 166, 60, 0.16), transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(181, 86, 27, 0.16), transparent 50%),
+    var(--card);
+}
+
+/* Superficie lunar ámbar (SVG con ruido + iluminación; sin imágenes externas). */
+.moon {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--hero-bg);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(13, 11, 9, 0) 0%, rgba(13, 11, 9, 0.55) 70%, #0d0b09 100%),
+    linear-gradient(180deg, rgba(13, 11, 9, 0.2), rgba(13, 11, 9, 0.8) 72%, #0d0b09),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1200'%20height='700'%3E%3Cfilter%20id='f'%20x='0'%20y='0'%20width='100%25'%20height='100%25'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='.014%20.02'%20numOctaves='6'%20seed='11'%20stitchTiles='stitch'%20result='n'/%3E%3CfeDiffuseLighting%20in='n'%20surfaceScale='5'%20diffuseConstant='1.1'%20lighting-color='%23f0a63a'%20result='l'%3E%3CfeDistantLight%20azimuth='225'%20elevation='38'/%3E%3C/feDiffuseLighting%3E%3CfeColorMatrix%20in='l'%20type='matrix'%20values='.9%200%200%200%20-.12%20%200%20.7%200%200%20-.12%20%200%200%20.5%200%20-.1%20%200%200%200%201%200'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url%28%23f%29'/%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+}
+/* Borde luminoso del planeta */
+.moon::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  z-index: -1;
+  left: -25%;
+  right: -25%;
+  top: -70%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 10px 50px 2px rgba(233, 166, 60, 0.45), inset 0 10px 30px rgba(233, 166, 60, 0.3);
   pointer-events: none;
-  z-index: 1;
+}
+
+/* Logotipo: letras finas, muy espaciadas; la "A" es un chevrón sin travesaño (Λ). */
+.wordmark {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.34em;
+  margin-right: -0.34em;
+  line-height: 1;
+  color: var(--accent);
+}
+.tagline {
+  font-size: 0.62em;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .card-lift { transition: none; }
 }
